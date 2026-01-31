@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mosaic/akun_screen.dart';
-import 'package:mosaic/jadwal_screen.dart';
-import 'package:mosaic/materi_screen.dart';
+import 'package:mosaic/screens/akun_screen.dart';
+import 'package:mosaic/screens/jadwal_screen.dart';
+import 'package:mosaic/screens/materi_screen.dart';
 
 class Layout extends StatefulWidget {
   const Layout({super.key});
