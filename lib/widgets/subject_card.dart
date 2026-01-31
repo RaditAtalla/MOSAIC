@@ -57,6 +57,7 @@ class SubjectCard extends StatelessWidget {
                             SizedBox(
                               width: 140,
                               child: LinearProgressIndicator(
+                                borderRadius: BorderRadius.circular(10),
                                 value: masteryPercentage / 100.0,
                                 backgroundColor: Color(0xFFCDF7FF),
                                 color: Color(0xFF13C8EC),
@@ -96,7 +97,7 @@ class SubjectCard extends StatelessWidget {
                           ),
                           SizedBox(width: 10),
                           Text(
-                            "Mulai Review",
+                            "Baca Ringkasan",
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 16,

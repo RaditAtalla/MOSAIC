@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 class MosaicCard extends StatelessWidget {
   final String activity;
   final int duration;
+  final VoidCallback onPressed;
 
-  const MosaicCard({super.key, required this.activity, required this.duration});
+  const MosaicCard({super.key, required this.activity, required this.duration, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +20,7 @@ class MosaicCard extends StatelessWidget {
         child: Row(
           children: [
             IconButton(
-              onPressed: () {},
+              onPressed: onPressed,
               icon: Icon(
                 Icons.play_circle_fill_rounded,
                 color: Color(0xFF0EA5C6),
