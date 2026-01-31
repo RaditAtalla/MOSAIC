@@ -1,12 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:http/http.dart' as http;
 
 class FlashcardScreen extends StatefulWidget {
   final String uuid;
   final String token;
+
   const FlashcardScreen({super.key, required this.uuid, required this.token});
 
   @override
@@ -14,17 +15,17 @@ class FlashcardScreen extends StatefulWidget {
 }
 
 class _FlashcardScreenState extends State<FlashcardScreen> {
-  String questionText = "Apa rumus dari lorem ipsum?";
-  String buttonText = "T A M P I L K A N";
   late Timer _timer;
   int _secondsRemaining = 900;
-  final int _totalSeconds = 900;
-  bool _isCardPressed = false;
+
   List<Map<String, dynamic>> flashcards = [];
+
+  int _currentIndex = 0;
+  bool _showBack = false;
+  String _selectedAnswer = "";
 
   Future<void> fetchFlashcards() async {
     try {
-      print('Fetching summary for UUID: ${widget.uuid}');
       final response = await http.post(
         Uri.parse(
           'https://vgq9k988-8000.asse.devtunnels.ms/api/v1/ai/materials/flashcards',
@@ -36,7 +37,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         body: jsonEncode({'materialId': widget.uuid}),
       );
 
-      print('Summary response status: ${response.statusCode}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
@@ -44,19 +44,59 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             flashcards = List<Map<String, dynamic>>.from(data['data']);
           });
         }
-      } else {
-        print('Error response: ${response.body}');
       }
     } catch (e) {
-      print('Error fetching materials: $e');
+      debugPrint('Error fetching flashcards: $e');
     }
+  }
+
+  void sendAnswer(bool isCorrect) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+          'https://vgq9k988-8000.asse.devtunnels.ms/api/v1/ai/materials/${widget.uuid}/flashcards/attempts',
+        ),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'flashcardId': flashcards[_currentIndex]["id"],
+          'selectedAnswer': isCorrect,
+        }),
+      );
+
+      _goToNextCard();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Map<String, dynamic>? get currentFlashcard {
+    if (flashcards.isEmpty || _currentIndex >= flashcards.length) {
+      return null;
+    }
+    return flashcards[_currentIndex];
+  }
+
+  void _goToNextCard() {
+    setState(() {
+      _showBack = false;
+
+      if (_currentIndex < flashcards.length - 1) {
+        _currentIndex++;
+      } else {
+        Navigator.of(context).pop(); // finished all cards
+      }
+    });
   }
 
   @override
   void initState() {
     super.initState();
     fetchFlashcards();
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_secondsRemaining > 0) {
           _secondsRemaining--;
@@ -74,16 +114,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     super.dispose();
   }
 
-  String _formatTime(int seconds) {
-    int minutes = seconds ~/ 60;
-    int secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
+    if (flashcards.isEmpty) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
-      backgroundColor: Color(0xFFF8FBFC),
+      backgroundColor: const Color(0xFFF8FBFC),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(kToolbarHeight + 48),
         child: Padding(
@@ -93,22 +131,18 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             backgroundColor: Colors.transparent,
             automaticallyImplyLeading: false,
             leading: IconButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              icon: Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close),
             ),
             centerTitle: true,
             title: Container(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFFECF8FB),
+                color: const Color(0xFFECF8FB),
                 borderRadius: BorderRadius.circular(100),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Icon(Icons.quiz_outlined),
                   SizedBox(width: 10),
@@ -126,13 +160,10 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
         child: Column(
           children: [
-
             GestureDetector(
               onTap: () {
                 setState(() {
-                  questionText = "a + b = c";
-                  buttonText = "Selanjutnya";
-                  _isCardPressed = true;
+                  _showBack = !_showBack;
                 });
               },
               child: Container(
@@ -140,10 +171,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      offset: Offset(0, 2),
+                      offset: const Offset(0, 2),
                       blurRadius: 20,
-                      spreadRadius: 0,
-                      color: Color(0xFF13C8EC).withValues(alpha: 0.05),
+                      color: const Color(0xFF13C8EC).withOpacity(0.05),
                     ),
                   ],
                 ),
@@ -153,21 +183,26 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       children: [
                         Container(
                           height: 350,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(10),
                             ),
                           ),
                           child: Center(
                             child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 80),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                              ),
                               child: Text(
-                                questionText,
+                                _showBack
+                                    ? (currentFlashcard?['back'] as String? ??
+                                          '')
+                                    : (currentFlashcard?['front'] as String? ??
+                                          ''),
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 32,
+                                style: const TextStyle(
+                                  fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -176,34 +211,25 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                         ),
                         Container(
                           height: 100,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Color(0xFFFBFCFD),
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10),
+                            borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(10),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                offset: Offset(0, 4),
-                                blurRadius: 0,
-                                spreadRadius: 0,
-                                color: Color(0xFF13C8EC),
-                              ),
-                            ],
                           ),
                           child: Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.touch_app,
                                   size: 32,
                                   color: Color(0xFF0D68C0),
                                 ),
-                                SizedBox(height: 20),
+                                const SizedBox(height: 20),
                                 Text(
-                                  buttonText,
-                                  style: TextStyle(
+                                  _showBack ? "Jawab" : "T A M P I L K A N",
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF0D68C0),
@@ -219,18 +245,18 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       top: 16,
                       left: 16,
                       child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Color(0xFFECF8FB),
+                          color: const Color(0xFFECF8FB),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          "Kalkulus: Anti-Derivative",
-                          style: TextStyle(
-                            fontSize: 16,
+                          "Difficulty: ${currentFlashcard?['difficulty']}",
+                          style: const TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF3D7984),
                           ),
@@ -241,21 +267,21 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                 ),
               ),
             ),
-            if (_isCardPressed) ...[
-              SizedBox(height: 30),
+            if (_showBack) ...[
+              const SizedBox(height: 30),
               Row(
                 children: [
                   Expanded(
                     child: FilledButton(
-                      onPressed: () {},
+                      onPressed: () => sendAnswer(false),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Color(0xFFEF4444),
-                        padding: EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: const Color(0xFFEF4444),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         "Salah",
                         style: TextStyle(
                           fontSize: 16,
@@ -265,18 +291,18 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 15),
+                  const SizedBox(width: 15),
                   Expanded(
                     child: FilledButton(
-                      onPressed: () {},
+                      onPressed: () => sendAnswer(true),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Color(0xFF10B981),
-                        padding: EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: const Color(0xFF10B981),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         "Benar",
                         style: TextStyle(
                           fontSize: 16,
