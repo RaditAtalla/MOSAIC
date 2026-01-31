@@ -22,7 +22,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
   int _currentIndex = 0;
   bool _showBack = false;
-  String _selectedAnswer = "";
 
   Future<void> fetchFlashcards() async {
     try {
@@ -52,7 +51,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
   void sendAnswer(bool isCorrect) async {
     try {
-      final response = await http.post(
+      await http.post(
         Uri.parse(
           'https://vgq9k988-8000.asse.devtunnels.ms/api/v1/ai/materials/${widget.uuid}/flashcards/attempts',
         ),

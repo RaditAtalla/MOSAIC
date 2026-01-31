@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mosaic/screens/flashcard_screen.dart';
 import 'package:mosaic/screens/quiz_screen.dart';
 import 'package:mosaic/widgets/mosaic_card.dart';
-import 'package:mosaic/widgets/subject_card.dart';
 import 'package:mosaic/widgets/time_card.dart';
 import 'package:mosaic/widgets/time_info.dart';
 
