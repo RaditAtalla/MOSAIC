@@ -4,7 +4,9 @@ import 'package:mosaic/screens/jadwal_screen.dart';
 import 'package:mosaic/screens/materi_screen.dart';
 
 class Layout extends StatefulWidget {
-  const Layout({super.key});
+  final String token;
+
+  const Layout({super.key, required this.token});
 
   @override
   State<Layout> createState() => _LayoutState();
@@ -12,11 +14,17 @@ class Layout extends StatefulWidget {
 
 class _LayoutState extends State<Layout> {
   int _currentPage = 0;
-  static const List<Widget> _pages = [
-      JadwalScreen(),
-      MateriScreen(),
-      AkunScreen(),
+
+  List<Widget> get _pages => [
+    JadwalScreen(token: widget.token),
+    MateriScreen(token: widget.token),
+    AkunScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +46,7 @@ class _LayoutState extends State<Layout> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Rabu, 21 Januari 2026",
+                  widget.token,
                   style: TextStyle(fontSize: 16, color: Color(0xFF3D7984)),
                 ),
                 Text(
@@ -62,7 +70,6 @@ class _LayoutState extends State<Layout> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentPage,
         onDestinationSelected: (int index) {
-          print(index);
           setState(() {
             _currentPage = index;
           });

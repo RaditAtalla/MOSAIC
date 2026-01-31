@@ -7,7 +7,8 @@ import 'package:mosaic/widgets/time_card.dart';
 import 'package:mosaic/widgets/time_info.dart';
 
 class JadwalScreen extends StatelessWidget {
-  const JadwalScreen({super.key});
+  final String token;
+  const JadwalScreen({super.key, required this.token});
 
   @override
   Widget build(BuildContext context) {
@@ -17,12 +18,6 @@ class JadwalScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SubjectCard(
-              name: "Kalkulus: Anti-Derivative",
-              masteryPercentage: 50,
-            ),
-            SizedBox(height: 30),
-
             Text(
               "Jadwal Kamu",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),

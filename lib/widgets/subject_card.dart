@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:mosaic/screens/summary_screen.dart';
 
 class SubjectCard extends StatelessWidget {
+  final String token;
+  final String uuid;
   final String name;
   final int masteryPercentage;
 
-  const SubjectCard({super.key, required this.name, required this.masteryPercentage});
+  const SubjectCard({
+    super.key,
+    required this.name,
+    required this.masteryPercentage,
+    required this.uuid,
+    required this.token,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +88,14 @@ class SubjectCard extends StatelessWidget {
                     ),
                     SizedBox(height: 15),
                     FilledButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SummaryScreen(uuid: uuid, token: token),
+                          ),
+                        );
+                      },
                       style: FilledButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 20),
                         backgroundColor: Color(0xFF13C8EC),
