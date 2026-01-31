@@ -47,7 +47,12 @@ class JadwalScreen extends StatelessWidget {
                   duration: 15,
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => FlashcardScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => FlashcardScreen(
+                        uuid: "a9bf0f90-ea91-4a02-8f0a-c07d88681e71",
+                        token: token,
+                      ),
+                    ),
                   ),
                 ),
               ],

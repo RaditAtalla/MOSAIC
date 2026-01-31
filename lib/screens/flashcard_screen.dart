@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:http/http.dart' as http;
 
 class FlashcardScreen extends StatefulWidget {
-  const FlashcardScreen({super.key});
+  final String uuid;
+  final String token;
+  const FlashcardScreen({super.key, required this.uuid, required this.token});
 
   @override
   State<FlashcardScreen> createState() => _FlashcardScreenState();
@@ -12,13 +17,45 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   String questionText = "Apa rumus dari lorem ipsum?";
   String buttonText = "T A M P I L K A N";
   late Timer _timer;
-  int _secondsRemaining = 870;
-  final int _totalSeconds = 870;
+  int _secondsRemaining = 900;
+  final int _totalSeconds = 900;
   bool _isCardPressed = false;
+  List<Map<String, dynamic>> flashcards = [];
+
+  Future<void> fetchFlashcards() async {
+    try {
+      print('Fetching summary for UUID: ${widget.uuid}');
+      final response = await http.post(
+        Uri.parse(
+          'https://vgq9k988-8000.asse.devtunnels.ms/api/v1/ai/materials/flashcards',
+        ),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'materialId': widget.uuid}),
+      );
+
+      print('Summary response status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          setState(() {
+            flashcards = List<Map<String, dynamic>>.from(data['data']);
+          });
+        }
+      } else {
+        print('Error response: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching materials: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    fetchFlashcards();
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
         if (_secondsRemaining > 0) {
